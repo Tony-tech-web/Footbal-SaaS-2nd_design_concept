@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #000000;
+  --color-surface: #0A0A0B;
+  --color-primary: #FF6B00;
+  --color-primary-light: #FFB693;
+  --color-secondary: #00E5FF;
+  --color-glass: rgba(255, 255, 255, 0.02);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-glass-hover: rgba(255, 255, 255, 0.06);
+
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  --shadow-glow: 0 0 20px rgba(255, 107, 0, 0.15);
+
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: white;
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background-color: var(--color-glass);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--color-glass-border);
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow-glass);
+  }
+  
+  .glass-button {
+    background-color: var(--color-glass);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--color-glass-border);
+    border-radius: 0.75rem;
+    transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  
+  .glass-button:hover {
+    background-color: var(--color-glass-hover);
+  }
+  
+  .glass-button:active {
+    transform: scale(0.96);
+  }
+  
+  .text-gradient {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    background-image: linear-gradient(to right, white, rgba(255, 255, 255, 0.5));
+  }
+  
+  .text-gradient-primary {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    background-image: linear-gradient(to right, var(--color-primary), var(--color-primary-light));
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
