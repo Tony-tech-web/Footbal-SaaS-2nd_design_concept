@@ -1,162 +1,239 @@
 import React from 'react';
-import { Activity, Cpu, Database, Server, ArrowUpRight, ArrowDownRight, Zap, ShieldAlert } from 'lucide-react';
+import { 
+  Activity, 
+  TrendingUp, 
+  Zap, 
+  AlertCircle, 
+  ChevronRight, 
+  Clock, 
+  CheckCircle2,
+  BrainCircuit,
+  Database
+} from 'lucide-react';
+import { useStarkStore, SlipStatus } from '../../store/useStarkStore';
 import { cn } from '../../lib/utils';
 
 export function Dashboard() {
+  const { predictions, accuracy, jobs } = useStarkStore();
+  const activeJobs = jobs.filter(j => j.status === 'active');
+
   return (
     <div className="space-y-4 md:space-y-6 animate-in fade-in duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]">
-      {/* Header */}
+      {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight">System Overview</h1>
-          <p className="text-xs md:text-sm text-white/40 mt-1">Real-time monitoring of STARK prediction engine.</p>
+          <p className="text-xs md:text-sm text-white/40 mt-1">Real-time predictive analytics and engine health.</p>
         </div>
-        <div className="flex gap-2 sm:gap-3">
-          <button className="glass-button px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2 text-xs md:text-sm font-medium">
-            <Database className="w-3.5 h-3.5 md:w-4 md:h-4 text-white/60" />
-            <span className="hidden sm:inline">Export Data</span>
-            <span className="sm:hidden">Export</span>
-          </button>
-          <button className="glass-button px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2 text-xs md:text-sm font-medium bg-primary/10 border-primary/30 text-primary hover:bg-primary/20">
-            <Zap className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            <span className="hidden sm:inline">Force Sync</span>
-            <span className="sm:hidden">Sync</span>
-          </button>
+        <div className="flex items-center gap-2">
+          <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[10px] font-mono uppercase tracking-widest text-white/40">
+            Engine: <span className="text-secondary font-bold">STABLE</span>
+          </div>
+          <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[10px] font-mono uppercase tracking-widest text-white/40">
+            Uptime: <span className="text-white/80 font-bold">99.9%</span>
+          </div>
         </div>
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        <MetricCard title="API Latency" value="14ms" trend="-2ms" trendUp={false} icon={Activity} status="good" />
-        <MetricCard title="Queue Load" value="84%" trend="+12%" trendUp={true} icon={Server} status="warning" />
-        <MetricCard title="Active Models" value="4/4" trend="Stable" trendUp={true} icon={Cpu} status="good" />
-        <MetricCard title="Accuracy" value="68.2%" trend="+1.4%" trendUp={true} icon={Zap} status="good" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard 
+          icon={Activity} 
+          label="Total Predictions" 
+          value={predictions.length.toString()} 
+          trend="+12%" 
+          color="primary" 
+        />
+        <MetricCard 
+          icon={TrendingUp} 
+          label="Avg. Accuracy" 
+          value={`${accuracy}%`} 
+          trend="+0.4%" 
+          color="secondary" 
+        />
+        <MetricCard 
+          icon={Database} 
+          label="Active Jobs" 
+          value={activeJobs.length.toString()} 
+          trend="Stable" 
+          color="secondary" 
+        />
+        <MetricCard 
+          icon={Zap} 
+          label="Avg. Confidence" 
+          value="84.2%" 
+          trend="+2.1%" 
+          color="primary" 
+        />
       </div>
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Live Feed */}
-        <div className="lg:col-span-2 glass-panel p-4 md:p-6">
-          <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h2 className="text-base md:text-lg font-headline font-semibold flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(255,107,0,0.8)]" />
-              Live Oracle Feed
-            </h2>
-            <span className="text-[9px] md:text-[10px] font-mono text-white/40 uppercase tracking-wider border border-white/10 px-2 py-1 rounded-md bg-white/5">Auto-updating</span>
-          </div>
-
-          <div className="space-y-2 md:space-y-3">
-            {[
-              { match: "Arsenal vs Liverpool", league: "Premier League", prediction: "Home Win", confidence: 82, time: "Just now" },
-              { match: "Real Madrid vs Barcelona", league: "La Liga", prediction: "Draw", confidence: 45, time: "2m ago" },
-              { match: "Bayern Munich vs BVB", league: "Bundesliga", prediction: "Home Win", confidence: 91, time: "5m ago" },
-              { match: "AC Milan vs Inter", league: "Serie A", prediction: "Away Win", confidence: 68, time: "12m ago" },
-            ].map((item, i) => (
-              <div key={i} className="group flex flex-col sm:flex-row sm:items-center justify-between p-3 md:p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all duration-300 cursor-pointer gap-3 sm:gap-0">
-                <div className="flex items-center gap-3 md:gap-4">
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white/[0.03] flex items-center justify-center border border-white/[0.05] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
-                    <Zap className="w-4 h-4 md:w-5 md:h-5 text-primary/70 group-hover:text-primary transition-colors duration-300" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-sm md:text-base leading-tight">{item.match}</h3>
-                    <p className="text-[10px] md:text-[11px] text-white/40 mt-1">{item.league} • {item.time}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4 sm:gap-6 pl-11 sm:pl-0">
-                  <div className="text-left sm:text-right w-full sm:w-auto">
-                    <div className="flex items-center justify-between sm:justify-end gap-2">
-                      <p className="text-xs md:text-sm font-medium text-white/90">{item.prediction}</p>
-                      <span className="text-[9px] md:text-[10px] font-mono text-white/60 sm:hidden">{item.confidence}%</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <div className="w-full sm:w-24 h-1.5 bg-white/5 rounded-full overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]">
-                        <div 
-                          className={cn("h-full rounded-full transition-all duration-1000 ease-out", item.confidence > 75 ? "bg-primary shadow-[0_0_8px_rgba(255,107,0,0.5)]" : item.confidence > 50 ? "bg-secondary shadow-[0_0_8px_rgba(0,229,255,0.5)]" : "bg-white/30")} 
-                          style={{ width: `${item.confidence}%` }} 
-                        />
-                      </div>
-                      <span className="text-[9px] md:text-[10px] font-mono text-white/60 hidden sm:inline-block">{item.confidence}%</span>
-                    </div>
-                  </div>
-                </div>
+        {/* Main Feed */}
+        <div className="lg:col-span-2 space-y-4 md:space-y-6">
+          <div className="glass-panel p-4 md:p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" />
+                <h2 className="text-sm font-bold uppercase tracking-widest text-white/60">Live Prediction Feed</h2>
               </div>
-            ))}
-          </div>
-        </div>
+              <button className="text-[10px] font-mono text-white/20 hover:text-white/40 uppercase tracking-widest flex items-center gap-1 transition-colors">
+                View All <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
 
-        {/* System Alerts */}
-        <div className="glass-panel p-4 md:p-6 flex flex-col">
-          <div className="flex items-center justify-between mb-4 md:mb-6">
-            <h2 className="text-base md:text-lg font-headline font-semibold">System Alerts</h2>
-            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
-              <span className="text-[10px] md:text-xs font-mono text-red-400">2</span>
+            <div className="space-y-3">
+              {predictions.slice(0, 5).map((prediction) => (
+                <PredictionItem key={prediction.id} prediction={prediction} />
+              ))}
             </div>
           </div>
 
-          <div className="flex-1 space-y-2 md:space-y-3">
-            <AlertCard type="error" title="Model Drift Detected" message="Claude-3.5-Sonnet showing 12% drift on NBA predictions." time="14m ago" />
-            <AlertCard type="warning" title="High Queue Latency" message="Processing time exceeded 2000ms for batch #8921." time="1h ago" />
-            <AlertCard type="info" title="Patch Deployed" message="Formula Engine updated to v2.4.1 successfully." time="3h ago" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            <div className="glass-panel p-5 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <BrainCircuit className="w-4 h-4 text-secondary" />
+                <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">Model Consensus</h2>
+              </div>
+              <div className="space-y-4">
+                <ConsensusBar label="Claude-3.5-Sonnet" value={88} color="secondary" />
+                <ConsensusBar label="GPT-4o" value={74} color="primary" />
+                <ConsensusBar label="DeepSeek-V3" value={92} color="secondary" />
+              </div>
+            </div>
+            <div className="glass-panel p-5 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Activity className="w-4 h-4 text-primary" />
+                <h2 className="text-xs font-bold uppercase tracking-widest text-white/60">System Alerts</h2>
+              </div>
+              <div className="space-y-3">
+                <AlertItem type="info" message="New formula v2.4.1 deployed successfully." />
+                <AlertItem type="warning" message="High latency detected in Opta API stream." />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar Widgets */}
+        <div className="space-y-4 md:space-y-6">
+          <div className="glass-panel p-6">
+            <h2 className="text-lg font-headline font-semibold mb-4">Queue Status</h2>
+            <div className="space-y-4">
+              {activeJobs.length > 0 ? activeJobs.map(job => (
+                <div key={job.id} className="space-y-2">
+                  <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
+                    <span className="text-white/40">{job.type} Job</span>
+                    <span className="text-secondary">{job.progress}%</span>
+                  </div>
+                  <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-secondary rounded-full transition-all duration-500" style={{ width: `${job.progress}%` }} />
+                  </div>
+                </div>
+              )) : (
+                <p className="text-xs text-white/20 italic">No active jobs in queue.</p>
+              )}
+            </div>
+            <button className="w-full mt-6 py-2 text-xs font-mono text-white/30 hover:text-white uppercase tracking-widest border border-white/5 rounded-xl hover:bg-white/5 transition-all">
+              Manage Queue
+            </button>
           </div>
 
-          <button className="w-full mt-4 py-2.5 text-[10px] md:text-xs font-mono text-white/40 hover:text-white/80 transition-colors uppercase tracking-wider border-t border-white/5 pt-4">
-            View All Logs
-          </button>
+          <div className="glass-panel p-6 bg-primary/5 border-primary/20">
+            <h2 className="text-lg font-headline font-semibold text-primary mb-2">Accuracy Target</h2>
+            <div className="flex items-baseline gap-2 mb-4">
+              <span className="text-4xl font-headline font-bold">98.2%</span>
+              <span className="text-xs text-primary/60 font-mono">+0.4%</span>
+            </div>
+            <p className="text-xs text-white/40 leading-relaxed">
+              System is currently outperforming the baseline by 4.2% following the v2.4.1 formula update.
+            </p>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function MetricCard({ title, value, trend, trendUp, icon: Icon, status }: any) {
+function MetricCard({ icon: Icon, label, value, trend, color }: { icon: any, label: string, value: string, trend: string, color: 'primary' | 'secondary' }) {
   return (
-    <div className="glass-panel p-3 md:p-5 relative overflow-hidden group">
-      <div className="absolute -top-2 -right-2 md:top-0 md:right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-500">
-        <Icon className="w-12 h-12 md:w-16 md:h-16" />
-      </div>
-      
-      <div className="flex items-center justify-between mb-2 md:mb-4 relative z-10">
-        <h3 className="text-[9px] md:text-xs font-mono text-white/50 uppercase tracking-wider truncate pr-2">{title}</h3>
+    <div className="glass-panel p-5 space-y-4 group hover:bg-white/[0.04] transition-all">
+      <div className="flex items-center justify-between">
         <div className={cn(
-          "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full shrink-0",
-          status === 'good' ? "bg-secondary shadow-[0_0_8px_rgba(0,229,255,0.6)]" : 
-          status === 'warning' ? "bg-primary shadow-[0_0_8px_rgba(255,107,0,0.6)]" : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
-        )} />
-      </div>
-      
-      <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-3 relative z-10">
-        <span className="text-xl md:text-3xl font-headline font-bold tracking-tight leading-none">{value}</span>
-        <div className={cn(
-          "flex items-center text-[10px] md:text-xs font-medium",
-          trendUp ? (status === 'warning' ? "text-red-400" : "text-secondary") : "text-white/60"
+          "w-10 h-10 rounded-2xl flex items-center justify-center border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]",
+          color === 'primary' ? "bg-primary/10 border-primary/20 text-primary" : "bg-secondary/10 border-secondary/20 text-secondary"
         )}>
-          {trendUp ? <ArrowUpRight className="w-2.5 h-2.5 md:w-3 md:h-3 mr-0.5" /> : <ArrowDownRight className="w-2.5 h-2.5 md:w-3 md:h-3 mr-0.5" />}
+          <Icon className="w-5 h-5" />
+        </div>
+        <span className={cn(
+          "text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border",
+          color === 'primary' ? "bg-primary/10 text-primary border-primary/20" : "bg-secondary/10 text-secondary border-secondary/20"
+        )}>
           {trend}
+        </span>
+      </div>
+      <div>
+        <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest">{label}</p>
+        <p className="text-2xl font-headline font-bold">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function PredictionItem({ prediction }: { prediction: any }) {
+  return (
+    <div className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all group cursor-pointer">
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary/30 transition-colors">
+          <Zap className="w-5 h-5 text-white/20 group-hover:text-primary transition-colors" />
+        </div>
+        <div>
+          <h4 className="text-sm font-bold">{prediction.match}</h4>
+          <p className="text-[10px] text-white/40 mt-0.5">{prediction.league} • {prediction.time}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-6">
+        <div className="text-right hidden sm:block">
+          <p className="text-[9px] font-mono text-white/20 uppercase tracking-widest">Confidence</p>
+          <p className={cn(
+            "text-xs font-bold",
+            prediction.finalConfidence > 80 ? "text-primary" : "text-secondary"
+          )}>{prediction.finalConfidence}%</p>
+        </div>
+        <div className={cn(
+          "px-2 py-1 rounded-lg border text-[9px] font-mono uppercase tracking-widest",
+          prediction.status === SlipStatus.PREDICTED ? "bg-primary/10 text-primary border-primary/20" : "bg-white/5 text-white/40 border-white/10"
+        )}>
+          {prediction.status}
         </div>
       </div>
     </div>
   );
 }
 
-function AlertCard({ type, title, message, time }: any) {
+function ConsensusBar({ label, value, color }: { label: string, value: number, color: 'primary' | 'secondary' }) {
   return (
-    <div className="p-2.5 md:p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] flex gap-2.5 md:gap-3 items-start shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]">
-      <div className={cn(
-        "mt-0.5 p-1.5 rounded-lg shrink-0",
-        type === 'error' ? "bg-red-500/10 text-red-400 border border-red-500/20" :
-        type === 'warning' ? "bg-primary/10 text-primary border border-primary/20" :
-        "bg-secondary/10 text-secondary border border-secondary/20"
-      )}>
-        {type === 'error' ? <ShieldAlert className="w-3.5 h-3.5 md:w-4 md:h-4" /> :
-         type === 'warning' ? <Activity className="w-3.5 h-3.5 md:w-4 md:h-4" /> :
-         <Zap className="w-3.5 h-3.5 md:w-4 md:h-4" />}
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
+        <span className="text-white/40">{label}</span>
+        <span className="text-white/80">{value}%</span>
       </div>
-      <div className="min-w-0">
-        <h4 className="text-xs md:text-sm font-medium text-white/90 truncate">{title}</h4>
-        <p className="text-[10px] md:text-xs text-white/50 mt-0.5 md:mt-1 leading-relaxed line-clamp-2">{message}</p>
-        <span className="text-[9px] md:text-[10px] font-mono text-white/30 mt-1.5 md:mt-2 block">{time}</span>
+      <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+        <div 
+          className={cn("h-full rounded-full transition-all duration-1000", color === 'primary' ? "bg-primary" : "bg-secondary")} 
+          style={{ width: `${value}%` }} 
+        />
       </div>
+    </div>
+  );
+}
+
+function AlertItem({ type, message }: { type: 'info' | 'warning', message: string }) {
+  return (
+    <div className={cn(
+      "p-3 rounded-xl border flex items-start gap-3",
+      type === 'info' ? "bg-white/[0.02] border-white/10" : "bg-red-500/5 border-red-500/20"
+    )}>
+      <AlertCircle className={cn("w-4 h-4 mt-0.5", type === 'info' ? "text-white/20" : "text-red-400")} />
+      <p className="text-[11px] text-white/60 leading-relaxed">{message}</p>
     </div>
   );
 }

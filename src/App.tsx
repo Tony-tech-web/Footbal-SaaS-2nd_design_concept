@@ -7,10 +7,24 @@ import React, { useState } from 'react';
 import { Layout } from './components/layout/Layout';
 import { Dashboard } from './components/views/Dashboard';
 import { LiveEngine } from './components/views/LiveEngine';
+import { LandingPage } from './components/views/LandingPage';
+import { Predictions } from './components/views/Predictions';
+import { BetSlips } from './components/views/BetSlips';
+import { QueueMonitor } from './components/views/QueueMonitor';
+import { FormulaEngine } from './components/views/FormulaEngine';
+import { useWebSocket } from './hooks/useWebSocket';
 import { Activity, FileText, Database, GitMerge, Settings } from 'lucide-react';
 
 export default function App() {
+  const [showLanding, setShowLanding] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // Initialize real-time engine
+  useWebSocket();
+
+  if (showLanding) {
+    return <LandingPage onEnterApp={() => setShowLanding(false)} />;
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -19,13 +33,13 @@ export default function App() {
       case 'live-engine':
         return <LiveEngine />;
       case 'predictions':
-        return <PlaceholderView title="Predictions" icon={Activity} description="Historical and upcoming prediction data." />;
+        return <Predictions />;
       case 'bet-slips':
-        return <PlaceholderView title="Bet Slips" icon={FileText} description="OCR processing and slip management." />;
+        return <BetSlips />;
       case 'queue':
-        return <PlaceholderView title="Queue Monitor" icon={Database} description="Real-time job queue and processing status." />;
+        return <QueueMonitor />;
       case 'formula':
-        return <PlaceholderView title="Formula Engine" icon={GitMerge} description="Model weighting and layer configuration." />;
+        return <FormulaEngine />;
       case 'settings':
         return <PlaceholderView title="Settings" icon={Settings} description="System configuration and API keys." />;
       default:
