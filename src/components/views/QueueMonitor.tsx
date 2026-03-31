@@ -1,213 +1,160 @@
+// src/components/views/QueueMonitor.tsx
 import React from 'react';
-import { 
-  Database, 
-  Activity, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  RefreshCw, 
-  Cpu, 
-  Network, 
-  Zap,
-  Play,
-  Pause,
-  Trash2
-} from 'lucide-react';
+import { Database, Activity, Cpu, Network, RefreshCw, CheckCircle2, AlertCircle, Clock, Zap } from 'lucide-react';
 import { useStarkStore } from '../../store/useStarkStore';
+import { useEngineHealth } from '../../hooks/useApi';
 import { cn } from '../../lib/utils';
 
-export function QueueMonitor() {
-  const { jobs, wsConnected } = useStarkStore();
+function StatCard({ icon:Icon, label, value, sub, color }: { icon:any; label:string; value:string; sub:string; color:'primary'|'secondary' }) {
+  return (
+    <div className="glass-panel p-5 space-y-3">
+      <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", color==='primary'?'bg-primary/10':'bg-secondary/10')}>
+        <Icon className={cn("w-4 h-4", color==='primary'?'text-primary':'text-secondary')} />
+      </div>
+      <div>
+        <p className="text-xl font-headline font-bold">{value}</p>
+        <p className="text-xs text-white/40">{label}</p>
+        <p className="text-[10px] font-mono text-white/25 mt-0.5">{sub}</p>
+      </div>
+    </div>
+  );
+}
+
+function QueueBar({ name, data }: { name: string; data: any }) {
+  const total = (data?.active||0) + (data?.waiting||0) + (data?.completed||0) + (data?.failed||0);
+  const completedPct = total > 0 ? Math.round((data?.completed||0)/total*100) : 0;
 
   return (
-    <div className="space-y-4 md:space-y-6 animate-in fade-in duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]">
+    <div className="glass-panel p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium capitalize">{name} Queue</h3>
+        <div className={cn("px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-widest border",
+          (data?.active||0)>0 ? "bg-yellow-500/10 border-yellow-500/20 text-yellow-400" : "bg-green-500/10 border-green-500/20 text-green-400")}>
+          {(data?.active||0)>0 ? 'Active' : 'Idle'}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { label:'Active',    value: data?.active||0,    color:'text-yellow-400' },
+          { label:'Waiting',   value: data?.waiting||0,   color:'text-white/50' },
+          { label:'Completed', value: data?.completed||0, color:'text-green-400' },
+          { label:'Failed',    value: data?.failed||0,    color:'text-red-400' },
+        ].map(s=>(
+          <div key={s.label} className="text-center p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+            <p className={cn("text-xl font-headline font-bold", s.color)}>{s.value}</p>
+            <p className="text-[8px] font-mono text-white/30 uppercase tracking-widest mt-0.5">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="flex justify-between text-[9px] font-mono text-white/30">
+          <span className="uppercase tracking-widest">Completion rate</span>
+          <span className="text-green-400 font-bold">{completedPct}%</span>
+        </div>
+        <div className="h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-green-500 to-secondary rounded-full transition-all duration-700" style={{width:`${completedPct}%`}} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function QueueMonitor() {
+  const { wsConnected, wsLatency, wsEventLog, engineHealth } = useStarkStore();
+  const { isLoading, refetch, isRefetching } = useEngineHealth();
+
+  const health = engineHealth as any;
+  const queues = health?.queues || {};
+  const uptime = health?.uptime ? Math.round(health.uptime / 60) : null;
+
+  const totalActive = (queues.predictions?.active||0) + (queues.verifications?.active||0);
+  const totalCompleted = (queues.predictions?.completed||0) + (queues.verifications?.completed||0);
+  const totalFailed = (queues.predictions?.failed||0) + (queues.verifications?.failed||0);
+
+  const predictionEvents = wsEventLog.filter(e => e.type === 'prediction:complete').length;
+  const patchEvents = wsEventLog.filter(e => e.type === 'formula:patched').length;
+
+  return (
+    <div className="space-y-4 md:space-y-6 animate-in fade-in duration-700">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight">Queue Monitor</h1>
-          <p className="text-xs md:text-sm text-white/40 mt-1">Real-time job processing and engine status.</p>
+          <p className="text-xs md:text-sm text-white/40 mt-1">Bull job queue status · Engine health · Real-time throughput</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className={cn(
-            "px-3 py-1.5 rounded-full border flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest transition-all",
-            wsConnected ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-red-500/10 border-red-500/20 text-red-400"
-          )}>
-            <div className={cn("w-1.5 h-1.5 rounded-full", wsConnected ? "bg-green-400 animate-pulse" : "bg-red-400")} />
-            {wsConnected ? 'Engine Connected' : 'Engine Disconnected'}
+          <div className={cn("px-3 py-1.5 rounded-full border flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest",
+            wsConnected ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-red-500/10 border-red-500/20 text-red-400")}>
+            <div className={cn("w-1.5 h-1.5 rounded-full", wsConnected?"bg-green-400 animate-pulse":"bg-red-400")} />
+            {wsConnected ? 'Engine Connected' : 'Engine Offline'}
           </div>
-          <button className="glass-button px-4 py-1.5 text-[10px] font-mono uppercase tracking-widest bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10">
-            Clear Completed
+          <button onClick={() => refetch()} disabled={isRefetching}
+            className="glass-button px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest flex items-center gap-1.5 bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all">
+            <RefreshCw className={cn("w-3 h-3", isRefetching && "animate-spin")} /> Refresh
           </button>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Cpu} label="CPU Load" value="42%" subValue="8 Cores Active" color="secondary" />
-        <StatCard icon={Network} label="Network Latency" value="12ms" subValue="Stable" color="primary" />
-        <StatCard icon={Database} label="Active Jobs" value={jobs.filter(j => j.status === 'active').length.toString()} subValue="In Queue: 12" color="secondary" />
-        <StatCard icon={Activity} label="Throughput" value="1.2k" subValue="req/min" color="primary" />
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard icon={Cpu}      label="Active Jobs"   value={String(totalActive)}    sub="processing now"         color="primary" />
+        <StatCard icon={Network}  label="WS Latency"    value={wsConnected?`${wsLatency}ms`:'—'}  sub={wsConnected?'stable':'disconnected'} color="secondary" />
+        <StatCard icon={Database} label="Completed"     value={String(totalCompleted)} sub="total processed"        color="secondary" />
+        <StatCard icon={Activity} label="Engine Uptime" value={uptime!=null?`${uptime}m`:'—'}     sub="since last restart"     color="primary" />
       </div>
 
-      {/* Jobs List */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between px-2">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-white/40">Active & Pending Jobs</h2>
-          <div className="flex items-center gap-4 text-[10px] font-mono text-white/20 uppercase tracking-widest">
-            <span>Type</span>
-            <span className="w-32">Progress</span>
-            <span className="w-24">Status</span>
-            <span className="w-8"></span>
-          </div>
-        </div>
+      {/* Queue details */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <QueueBar name="Predictions" data={queues.predictions} />
+        <QueueBar name="Verifications" data={queues.verifications} />
+      </div>
 
-        <div className="space-y-3">
-          {jobs.map((job) => (
-            <JobRow key={job.id} job={job} />
-          ))}
-          
-          {jobs.length === 0 && (
-            <div className="glass-panel p-12 flex flex-col items-center justify-center text-center space-y-4 opacity-50">
-              <Database className="w-12 h-12 text-white/10" />
-              <p className="text-sm text-white/40">No active jobs in queue.</p>
+      {/* Session events */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { label:'Predictions Completed (session)', value:predictionEvents, color:'text-green-400', icon:CheckCircle2 },
+          { label:'Formula Patches Applied (session)', value:patchEvents, color:'text-orange-400', icon:Zap },
+          { label:'Failed Jobs', value:totalFailed, color:totalFailed>0?'text-red-400':'text-white/50', icon:AlertCircle },
+        ].map(stat=>(
+          <div key={stat.label} className="glass-panel p-4 flex items-center gap-4">
+            <stat.icon className={cn("w-8 h-8 flex-shrink-0", stat.color)} />
+            <div>
+              <p className={cn("text-2xl font-headline font-bold", stat.color)}>{stat.value}</p>
+              <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest mt-0.5">{stat.label}</p>
             </div>
-          )}
-        </div>
+          </div>
+        ))}
       </div>
 
-      {/* Logs Section */}
+      {/* Engine Log */}
       <div className="glass-panel overflow-hidden">
-        <div className="p-4 border-b border-white/[0.05] flex items-center justify-between bg-white/[0.02]">
+        <div className="p-4 border-b border-white/[0.04] flex items-center justify-between bg-white/[0.02]">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-white/40" />
-            <h3 className="text-xs font-bold uppercase tracking-widest text-white/60">System Logs</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-white/40">Real-Time Event Log</h3>
+            {wsConnected && <span className="text-[9px] font-mono text-green-400 bg-green-500/10 border border-green-500/20 px-1.5 py-0.5 rounded-full">● LIVE</span>}
           </div>
-          <button className="text-[10px] font-mono text-white/20 hover:text-white/40 uppercase tracking-widest">Download Logs</button>
+          <span className="text-[9px] font-mono text-white/20">{wsEventLog.length} events</span>
         </div>
-        <div className="p-4 bg-black/40 font-mono text-[10px] md:text-xs space-y-2 h-[200px] overflow-y-auto custom-scrollbar">
-          <LogEntry time="10:24:01" type="INFO" message="Prediction engine initialized successfully." />
-          <LogEntry time="10:24:05" type="DEBUG" message="Fetching match data for ID: 88291..." />
-          <LogEntry time="10:24:08" type="SUCCESS" message="Match data retrieved. Starting analysis." />
-          <LogEntry time="10:24:12" type="INFO" message="Claude-3.5-Sonnet analysis complete. Confidence: 82%." />
-          <LogEntry time="10:24:15" type="INFO" message="GPT-4o analysis complete. Confidence: 78%." />
-          <LogEntry time="10:24:18" type="SUCCESS" message="Consensus reached. Final confidence: 80%." />
-          <LogEntry time="10:25:01" type="WARN" message="Network latency spike detected: 142ms." />
-          <LogEntry time="10:25:05" type="INFO" message="Retrying connection to data source..." />
-          <LogEntry time="10:25:08" type="SUCCESS" message="Connection restored. Latency: 12ms." />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ icon: Icon, label, value, subValue, color }: { icon: any, label: string, value: string, subValue: string, color: 'primary' | 'secondary' }) {
-  return (
-    <div className="glass-panel p-5 space-y-4 group hover:bg-white/[0.04] transition-all">
-      <div className="flex items-center justify-between">
-        <div className={cn(
-          "w-10 h-10 rounded-2xl flex items-center justify-center border shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]",
-          color === 'primary' ? "bg-primary/10 border-primary/20 text-primary" : "bg-secondary/10 border-secondary/20 text-secondary"
-        )}>
-          <Icon className="w-5 h-5" />
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] font-mono text-white/30 uppercase tracking-widest">{label}</p>
-          <p className="text-xl font-headline font-bold">{value}</p>
+        <div className="p-4 max-h-72 overflow-y-auto font-mono text-[10px] space-y-1.5">
+          {wsEventLog.length === 0 && <p className="text-white/20 text-center py-8">Connect to engine to see live events...</p>}
+          {wsEventLog.map((e, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <span className="text-white/20 flex-shrink-0 w-20">{new Date(e.timestamp).toLocaleTimeString()}</span>
+              <span className={cn("uppercase tracking-widest font-bold flex-shrink-0 w-40",
+                e.type==='prediction:complete'?'text-green-400':
+                e.type==='formula:patched'?'text-orange-400':
+                e.type==='connect'?'text-secondary':
+                e.type==='disconnect'?'text-red-400':
+                e.type==='formula:drift_alert'?'text-red-400':
+                'text-white/30')}>{e.type}</span>
+              <span className="text-white/30 truncate">{typeof e.payload === 'object' ? JSON.stringify(e.payload).slice(0,60) : String(e.payload)}</span>
+            </div>
+          ))}
         </div>
       </div>
-      <div className="flex items-center justify-between text-[10px] font-mono">
-        <span className="text-white/20 uppercase tracking-widest">Status</span>
-        <span className={cn("font-bold", color === 'primary' ? "text-primary" : "text-secondary")}>{subValue}</span>
-      </div>
-    </div>
-  );
-}
-
-function JobRow({ job }: { job: any }) {
-  const statusStyles = {
-    waiting: "bg-white/5 text-white/40 border-white/10",
-    active: "bg-secondary/10 text-secondary border-secondary/20 animate-pulse",
-    completed: "bg-green-500/10 text-green-400 border-green-500/20",
-    failed: "bg-red-500/10 text-red-400 border-red-500/20"
-  };
-
-  const statusIcons = {
-    waiting: Clock,
-    active: RefreshCw,
-    completed: CheckCircle2,
-    failed: AlertCircle
-  };
-
-  const StatusIcon = statusIcons[job.status] || Clock;
-
-  return (
-    <div className="glass-panel p-4 flex items-center justify-between group hover:bg-white/[0.04] transition-all">
-      <div className="flex items-center gap-4 flex-1">
-        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
-          <Zap className="w-5 h-5 text-white/20" />
-        </div>
-        <div>
-          <h4 className="text-sm font-bold">{job.id}</h4>
-          <p className="text-[10px] text-white/40 mt-0.5">{job.timestamp}</p>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-8 md:gap-12 pr-4">
-        <div className="hidden md:block">
-          <span className="text-[10px] font-mono text-white/30 uppercase tracking-widest">{job.type}</span>
-        </div>
-        
-        <div className="w-32 space-y-1.5">
-          <div className="flex items-center justify-between text-[9px] font-mono uppercase tracking-widest">
-            <span className="text-white/20">Progress</span>
-            <span className="text-white/60">{job.progress}%</span>
-          </div>
-          <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-            <div 
-              className={cn("h-full rounded-full transition-all duration-500", job.status === 'failed' ? 'bg-red-400' : 'bg-secondary')} 
-              style={{ width: `${job.progress}%` }} 
-            />
-          </div>
-        </div>
-
-        <div className={cn("w-24 px-2 py-1 rounded-lg border flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest", statusStyles[job.status])}>
-          <StatusIcon className={cn("w-3 h-3", job.status === 'active' ? 'animate-spin' : '')} />
-          {job.status}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {job.status === 'active' ? (
-            <button className="p-2 rounded-lg hover:bg-white/10 text-white/30 hover:text-white transition-all">
-              <Pause className="w-4 h-4" />
-            </button>
-          ) : job.status === 'waiting' ? (
-            <button className="p-2 rounded-lg hover:bg-white/10 text-white/30 hover:text-white transition-all">
-              <Play className="w-4 h-4" />
-            </button>
-          ) : (
-            <button className="p-2 rounded-lg hover:bg-red-500/10 text-white/30 hover:text-red-400 transition-all">
-              <Trash2 className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function LogEntry({ time, type, message }: { time: string, type: string, message: string }) {
-  const colors = {
-    INFO: "text-blue-400",
-    DEBUG: "text-purple-400",
-    SUCCESS: "text-green-400",
-    WARN: "text-yellow-400",
-    ERROR: "text-red-400"
-  };
-
-  return (
-    <div className="flex gap-3 leading-relaxed">
-      <span className="text-white/20 whitespace-nowrap">[{time}]</span>
-      <span className={cn("font-bold whitespace-nowrap", colors[type] || "text-white/40")}>{type}</span>
-      <span className="text-white/60">{message}</span>
     </div>
   );
 }

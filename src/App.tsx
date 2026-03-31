@@ -1,49 +1,60 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
+// src/App.tsx  [v2.0 — connected to Sports Oracle backend]
 import React, { useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from './components/layout/Layout';
-import { Dashboard } from './components/views/Dashboard';
-import { LiveEngine } from './components/views/LiveEngine';
-import { LandingPage } from './components/views/LandingPage';
-import { Predictions } from './components/views/Predictions';
-import { BetSlips } from './components/views/BetSlips';
-import { QueueMonitor } from './components/views/QueueMonitor';
+import { Dashboard }     from './components/views/Dashboard';
+import { LiveEngine }    from './components/views/LiveEngine';
+import { LandingPage }   from './components/views/LandingPage';
+import { Predictions }   from './components/views/Predictions';
+import { BetSlips }      from './components/views/BetSlips';
+import { QueueMonitor }  from './components/views/QueueMonitor';
 import { FormulaEngine } from './components/views/FormulaEngine';
-import { useWebSocket } from './hooks/useWebSocket';
-import { Activity, FileText, Database, GitMerge, Settings } from 'lucide-react';
+import { useWebSocket }  from './hooks/useWebSocket';
+import { Settings } from 'lucide-react';
 
-export default function App() {
+// React Query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      retryDelay: 1000,
+      staleTime: 10_000,
+    },
+  },
+});
+
+function PlaceholderView({ title, icon:Icon, description }: { title:string; icon:any; description:string }) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center px-4">
+      <div className="w-16 h-16 rounded-3xl bg-white/[0.03] flex items-center justify-center border border-white/[0.05] mb-6">
+        <Icon className="w-8 h-8 text-primary/50" />
+      </div>
+      <h1 className="text-2xl font-headline font-bold mb-2">{title}</h1>
+      <p className="text-xs text-white/40 max-w-md">{description}</p>
+      <div className="mt-8 px-5 py-2 rounded-xl bg-white/[0.02] border border-white/[0.05] text-[10px] font-mono text-white/30 uppercase tracking-widest">Coming Soon</div>
+    </div>
+  );
+}
+
+function AppInner() {
   const [showLanding, setShowLanding] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
-  
-  // Initialize real-time engine
+
+  // Initialize real Socket.IO connection
   useWebSocket();
 
-  if (showLanding) {
-    return <LandingPage onEnterApp={() => setShowLanding(false)} />;
-  }
+  if (showLanding) return <LandingPage onEnterApp={() => setShowLanding(false)} />;
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'live-engine':
-        return <LiveEngine />;
-      case 'predictions':
-        return <Predictions />;
-      case 'bet-slips':
-        return <BetSlips />;
-      case 'queue':
-        return <QueueMonitor />;
-      case 'formula':
-        return <FormulaEngine />;
-      case 'settings':
-        return <PlaceholderView title="Settings" icon={Settings} description="System configuration and API keys." />;
-      default:
-        return <Dashboard />;
+    switch(activeTab) {
+      case 'dashboard':   return <Dashboard />;
+      case 'live-engine': return <LiveEngine />;
+      case 'predictions': return <Predictions />;
+      case 'bet-slips':   return <BetSlips />;
+      case 'queue':       return <QueueMonitor />;
+      case 'formula':     return <FormulaEngine />;
+      case 'settings':    return <PlaceholderView title="Settings" icon={Settings} description="API keys, notification preferences, and system configuration." />;
+      default:            return <Dashboard />;
     }
   };
 
@@ -54,18 +65,10 @@ export default function App() {
   );
 }
 
-function PlaceholderView({ title, icon: Icon, description }: { title: string, icon: any, description: string }) {
+export default function App() {
   return (
-    <div className="h-full flex flex-col items-center justify-center text-center animate-in fade-in duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] px-4">
-      <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-white/[0.03] flex items-center justify-center border border-white/[0.05] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_1px_0_0_rgba(255,255,255,0.02)] backdrop-blur-xl mb-6 md:mb-8 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-50" />
-        <Icon className="w-8 h-8 md:w-10 md:h-10 text-primary/50 relative z-10" />
-      </div>
-      <h1 className="text-xl md:text-3xl font-headline font-bold tracking-tight mb-2 md:mb-3">{title}</h1>
-      <p className="text-xs md:text-sm text-white/40 max-w-md leading-relaxed">{description}</p>
-      <div className="mt-8 md:mt-10 px-4 md:px-6 py-2 md:py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] text-[10px] md:text-xs font-mono text-white/30 uppercase tracking-widest backdrop-blur-md">
-        Module Offline
-      </div>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <AppInner />
+    </QueryClientProvider>
   );
 }
