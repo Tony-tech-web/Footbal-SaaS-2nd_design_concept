@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Zap, BrainCircuit, ShieldCheck, Database, Activity, ArrowRight, CheckCircle2, GitCompare, Cpu, RefreshCw, BarChart3, MessageSquare, FileText, Trophy } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
-export function LandingPage({ onEnterApp }: { onEnterApp: () => void }) {
+export function LandingPage({ onEnterApp }: { onEnterApp: (tab?: string) => void }) {
   return (
     <div className="min-h-screen bg-black text-white selection:bg-primary/30 overflow-x-hidden">
       <Navbar onEnterApp={onEnterApp} />
@@ -18,7 +18,7 @@ export function LandingPage({ onEnterApp }: { onEnterApp: () => void }) {
   );
 }
 
-function Navbar({ onEnterApp }: { onEnterApp: () => void }) {
+function Navbar({ onEnterApp }: { onEnterApp: (tab?: string) => void }) {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -34,20 +34,20 @@ function Navbar({ onEnterApp }: { onEnterApp: () => void }) {
           ))}
         </div>
         <div className="flex items-center gap-4">
-          <button onClick={onEnterApp} className="text-sm font-medium text-white/60 hover:text-white transition-colors">Login</button>
-          <button onClick={onEnterApp} className="glass-button px-5 py-2 text-sm font-bold bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 shadow-[0_0_20px_rgba(255,107,0,0.1)]">Start Predicting</button>
+          <button onClick={() => onEnterApp()} className="text-sm font-medium text-white/60 hover:text-white transition-colors">Login</button>
+          <button onClick={() => onEnterApp()} className="glass-button px-5 py-2 text-sm font-bold bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 shadow-[0_0_20px_rgba(255,107,0,0.1)]">Start Predicting</button>
         </div>
       </div>
     </nav>
   );
 }
 
-function HeroSection({ onEnterApp }: { onEnterApp: () => void }) {
+function HeroSection({ onEnterApp }: { onEnterApp: (tab?: string) => void }) {
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black z-10" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255,107,0,0.08)_0%,_transparent_60%)]" />
+        <div className="absolute inset-0 bg-linear-to-b from-black via-black/80 to-black z-10" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,107,0,0.08)_0%,transparent_60%)]" />
       </div>
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.8}}>
@@ -63,11 +63,11 @@ function HeroSection({ onEnterApp }: { onEnterApp: () => void }) {
           <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
             6-layer AI formula · Claude primary + GPT-4 validator · Self-healing on failure · ⚽ Football & 🏀 Basketball
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button onClick={onEnterApp} className="glass-button px-8 py-4 text-base font-bold bg-primary/15 border-primary/40 text-primary hover:bg-primary/25 shadow-[0_0_40px_rgba(255,107,0,0.15)] flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
+            <button onClick={() => onEnterApp()} className="glass-button px-8 py-4 text-sm md:text-base font-bold bg-primary/15 border-primary/40 text-primary hover:bg-primary/25 shadow-[0_0_40px_rgba(255,107,0,0.15)] flex items-center gap-2">
               Enter Oracle <ArrowRight className="w-5 h-5" />
             </button>
-            <button className="px-8 py-4 text-base font-medium text-white/50 hover:text-white transition-colors">View Formula →</button>
+            <button onClick={() => onEnterApp('formula')} className="px-8 py-4 text-sm md:text-base font-medium text-white/50 hover:text-white transition-colors">View Formula →</button>
           </div>
         </motion.div>
 
@@ -153,7 +153,7 @@ function MetricsSection() {
   );
 }
 
-function CTASection({ onEnterApp }: { onEnterApp: () => void }) {
+function CTASection({ onEnterApp }: { onEnterApp: (tab?: string) => void }) {
   return (
     <section className="py-32 px-4">
       <div className="max-w-2xl mx-auto text-center">
@@ -163,7 +163,7 @@ function CTASection({ onEnterApp }: { onEnterApp: () => void }) {
           </div>
           <h2 className="text-4xl font-headline font-bold">Start Predicting Now</h2>
           <p className="text-white/40">Upload a bet slip image or type matches manually. The Oracle analyses every factor and tells you exactly what to back.</p>
-          <button onClick={onEnterApp} className="glass-button px-10 py-4 text-base font-bold bg-primary/15 border-primary/40 text-primary hover:bg-primary/25 shadow-[0_0_40px_rgba(255,107,0,0.15)] flex items-center gap-2 mx-auto">
+          <button onClick={() => onEnterApp()} className="glass-button px-10 py-4 text-sm md:text-base font-bold bg-primary/15 border-primary/40 text-primary hover:bg-primary/25 shadow-[0_0_40px_rgba(255,107,0,0.15)] flex items-center gap-2 mx-auto">
             Open Oracle <ArrowRight className="w-5 h-5" />
           </button>
         </div>

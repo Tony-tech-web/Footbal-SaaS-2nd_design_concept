@@ -26,12 +26,12 @@ const queryClient = new QueryClient({
 function PlaceholderView({ title, icon:Icon, description }: { title:string; icon:any; description:string }) {
   return (
     <div className="h-full flex flex-col items-center justify-center text-center px-4">
-      <div className="w-16 h-16 rounded-3xl bg-white/[0.03] flex items-center justify-center border border-white/[0.05] mb-6">
+      <div className="w-16 h-16 rounded-3xl bg-white/3 flex items-center justify-center border border-white/5 mb-6">
         <Icon className="w-8 h-8 text-primary/50" />
       </div>
       <h1 className="text-2xl font-headline font-bold mb-2">{title}</h1>
       <p className="text-xs text-white/40 max-w-md">{description}</p>
-      <div className="mt-8 px-5 py-2 rounded-xl bg-white/[0.02] border border-white/[0.05] text-[10px] font-mono text-white/30 uppercase tracking-widest">Coming Soon</div>
+      <div className="mt-8 px-5 py-2 rounded-xl bg-white/2 border border-white/5 text-[10px] font-mono text-white/30 uppercase tracking-widest">Coming Soon</div>
     </div>
   );
 }
@@ -43,7 +43,12 @@ function AppInner() {
   // Initialize real Socket.IO connection
   useWebSocket();
 
-  if (showLanding) return <LandingPage onEnterApp={() => setShowLanding(false)} />;
+  const handleEnterApp = (tab = 'dashboard') => {
+    setActiveTab(tab);
+    setShowLanding(false);
+  };
+
+  if (showLanding) return <LandingPage onEnterApp={handleEnterApp} />;
 
   const renderContent = () => {
     switch(activeTab) {
