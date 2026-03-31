@@ -38,7 +38,7 @@ export function useSlips(params?: Record<string, string>) {
       setLoading(true);
       try {
         const data = await slipsApi.list(params);
-        setSlips(data.slips);
+        setSlips(data.slips || []);
         return data;
       } finally { setLoading(false); }
     },
@@ -107,7 +107,7 @@ export function usePredictions(params?: Record<string, string>) {
       setLoading(true);
       try {
         const data = await resultsApi.list(params);
-        setPredictions(data.predictions);
+        setPredictions(data.predictions || []);
         return data;
       } finally { setLoading(false); }
     },

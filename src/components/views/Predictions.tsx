@@ -25,12 +25,12 @@ function ResultForm({ matchId, onDone }: { matchId: string; onDone: () => void }
   };
 
   return (
-    <div className="mt-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-3">
+    <div className="mt-4 p-4 rounded-xl bg-white/2 border-white/6 space-y-3">
       <p className="text-[10px] font-mono text-white/40 uppercase tracking-widest">Submit Result → triggers self-healing if wrong</p>
       <div className="grid grid-cols-3 gap-2 items-center">
-        <input value={home} onChange={e=>setHome(e.target.value)} type="number" min="0" placeholder="Home" className="bg-white/[0.03] border border-white/[0.05] rounded-xl px-3 py-2 text-sm text-white text-center placeholder:text-white/20 focus:outline-none focus:border-primary/40 transition-all" />
+        <input value={home} onChange={e=>setHome(e.target.value)} type="number" min="0" placeholder="Home" className="bg-white/3 border border-white/5 rounded-xl px-3 py-2 text-sm text-white text-center placeholder:text-white/20 focus:outline-none focus:border-primary/40 transition-all" />
         <div className="text-center text-white/30 font-mono text-sm">vs</div>
-        <input value={away} onChange={e=>setAway(e.target.value)} type="number" min="0" placeholder="Away" className="bg-white/[0.03] border border-white/[0.05] rounded-xl px-3 py-2 text-sm text-white text-center placeholder:text-white/20 focus:outline-none focus:border-primary/40 transition-all" />
+        <input value={away} onChange={e=>setAway(e.target.value)} type="number" min="0" placeholder="Away" className="bg-white/3 border border-white/5 rounded-xl px-3 py-2 text-sm text-white text-center placeholder:text-white/20 focus:outline-none focus:border-primary/40 transition-all" />
       </div>
       <label className="flex items-center gap-2 cursor-pointer">
         <input type="checkbox" checked={b2b} onChange={e=>setB2b(e.target.checked)} className="accent-primary w-3.5 h-3.5" />
@@ -55,10 +55,10 @@ function PredRow({ p, isExpanded, onToggle }: { p: Prediction; isExpanded: boole
   const tier = TIER_CONFIG[p.tier] || TIER_CONFIG.TIER3;
 
   return (
-    <div className={cn("glass-panel transition-all duration-300", isExpanded ? "border-white/10" : "hover:border-white/[0.08]")}>
+    <div className={cn("glass-panel transition-all duration-300", isExpanded ? "border-white/10" : "hover:border-white/8")}>
       <div className="p-4 flex items-center gap-4 cursor-pointer" onClick={onToggle}>
         {/* Sport + tier indicator */}
-        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+        <div className="flex flex-col items-center gap-1 shrink-0">
           <span className="text-lg">{p.sport === 'BASKETBALL' ? '🏀' : '⚽'}</span>
           <div className={cn("px-1.5 py-0.5 rounded-md text-[8px] font-mono font-bold border", tier.color, tier.bg, tier.border)}>{tier.label}</div>
         </div>
@@ -74,7 +74,7 @@ function PredRow({ p, isExpanded, onToggle }: { p: Prediction; isExpanded: boole
           </div>
         </div>
 
-        <div className="text-right flex-shrink-0 space-y-1">
+        <div className="text-right shrink-0 space-y-1">
           <div className="flex items-center gap-2 justify-end">
             {p.correct != null && (p.correct ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <AlertCircle className="w-4 h-4 text-red-400" />)}
             <span className={cn("text-xl font-headline font-bold", tier.color)}>{p.confidence}%</span>
@@ -92,9 +92,9 @@ function PredRow({ p, isExpanded, onToggle }: { p: Prediction; isExpanded: boole
 
       {/* Expanded */}
       {isExpanded && (
-        <div className="px-4 pb-4 space-y-4 border-t border-white/[0.04] pt-4">
+        <div className="px-4 pb-4 space-y-4 border-t border-white/4 pt-4">
           {/* Confidence bar */}
-          <div className="h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
+          <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
             <div className={cn("h-full rounded-full transition-all", tier.bar)} style={{ width: `${p.confidence}%` }} />
           </div>
 
@@ -104,7 +104,7 @@ function PredRow({ p, isExpanded, onToggle }: { p: Prediction; isExpanded: boole
               <p className="text-[9px] font-mono text-white/30 uppercase tracking-widest mb-2">Layer Scores</p>
               <div className="grid grid-cols-3 gap-2">
                 {Object.entries(p.layerScores).map(([k, v]) => (
-                  <div key={k} className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.04] text-center">
+                  <div key={k} className="p-2 rounded-lg bg-white/2 border border-white/4 text-center">
                     <p className="text-[8px] font-mono text-white/30 uppercase">{k}</p>
                     <p className={cn("text-sm font-bold font-mono mt-0.5", Number(v)>=80?'text-green-400':Number(v)>=65?'text-yellow-400':'text-red-400')}>{v}</p>
                   </div>
@@ -162,14 +162,15 @@ export function Predictions() {
 
   usePredictions(activeSport !== 'FOOTBALL' && activeSport !== undefined ? { sport: activeSport } : undefined);
 
-  const filtered = predictions.filter(p => {
+  const filtered = (predictions || []).filter(p => {
+    if (!p) return false;
     if (filter === 'TIER1' && p.tier !== 'TIER1') return false;
     if (filter === 'TIER2' && p.tier !== 'TIER2') return false;
     if (filter === 'TIER3' && p.tier !== 'TIER3') return false;
     if (filter === 'CORRECT' && !p.correct) return false;
     if (filter === 'WRONG' && p.correct !== false) return false;
     if (sportFilter !== 'ALL' && p.sport !== sportFilter) return false;
-    if (search && !p.match.toLowerCase().includes(search.toLowerCase()) && !p.betType.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !(p.match?.toLowerCase().includes(search.toLowerCase())) && !(p.betType?.toLowerCase().includes(search.toLowerCase()))) return false;
     return true;
   });
 
@@ -180,7 +181,7 @@ export function Predictions() {
           <h1 className="text-xl md:text-2xl font-headline font-bold tracking-tight">Predictions</h1>
           <p className="text-xs md:text-sm text-white/40 mt-1">Multi-layer AI analysis · Claude + GPT-4 consensus · Self-healing formula</p>
         </div>
-        <div className="flex items-center bg-white/[0.03] border border-white/[0.05] rounded-xl p-0.5 gap-0.5">
+        <div className="flex items-center bg-white/3 border border-white/5 rounded-xl p-0.5 gap-0.5">
           {(['ALL','FOOTBALL','BASKETBALL'] as const).map(s=>(
             <button key={s} onClick={()=>setSportFilter(s)}
               className={cn("px-2.5 py-1.5 rounded-lg text-[9px] font-mono uppercase tracking-widest transition-all",
@@ -196,13 +197,13 @@ export function Predictions() {
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
           <input value={search} onChange={e=>setSearch(e.target.value)} type="text" placeholder="Search matches or bet types..."
-            className="w-full bg-white/[0.03] border border-white/[0.05] rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-all" />
+            className="w-full bg-white/3 border border-white/5 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-primary/50 transition-all" />
         </div>
         <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {['ALL','TIER1','TIER2','TIER3','CORRECT','WRONG'].map(f=>(
             <button key={f} onClick={()=>setFilter(f)}
               className={cn("px-3 py-2 rounded-xl text-[9px] font-mono uppercase tracking-widest border transition-all whitespace-nowrap",
-                filter===f?"bg-white/10 border-white/20 text-white":"bg-white/[0.02] border-white/[0.05] text-white/40 hover:text-white/60")}>
+                filter===f?"bg-white/10 border-white/20 text-white":"bg-white/2 border-white/5 text-white/40 hover:text-white/60")}>
               {f}
             </button>
           ))}
@@ -212,10 +213,10 @@ export function Predictions() {
       {/* Stats row */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label:'Total', value:predictions.length, color:'text-white/70' },
-          { label:'Tier 1', value:predictions.filter(p=>p.tier==='TIER1').length, color:'text-green-400' },
-          { label:'Correct', value:predictions.filter(p=>p.correct===true).length, color:'text-green-400' },
-          { label:'Patched', value:predictions.filter(p=>p.patched).length, color:'text-orange-400' },
+          { label:'Total', value:(predictions || []).length, color:'text-white/70' },
+          { label:'Tier 1', value:(predictions || []).filter(p=>p?.tier==='TIER1').length, color:'text-green-400' },
+          { label:'Correct', value:(predictions || []).filter(p=>p?.correct===true).length, color:'text-green-400' },
+          { label:'Patched', value:(predictions || []).filter(p=>p?.patched).length, color:'text-orange-400' },
         ].map(s=>(
           <div key={s.label} className="glass-panel p-3 text-center">
             <p className={cn("text-xl font-headline font-bold", s.color)}>{s.value}</p>
